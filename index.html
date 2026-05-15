@@ -728,6 +728,20 @@
     color: var(--brand-3);
     font-weight: 500;
   }
+  /* Inline clickable links inside a sent comment */
+  .c-text .inline-link,
+  .composer-editor .inline-link {
+    color: var(--brand-2);
+    border-bottom: 1px solid var(--brand-soft);
+    word-break: break-all;
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .c-text .inline-link:hover,
+  .composer-editor .inline-link:hover {
+    color: #1D4ED8;
+    border-bottom-color: var(--brand-2);
+  }
   .c-actions {
     display: flex; align-items: center; gap: 14px;
     padding-top: 2px;
@@ -2140,9 +2154,25 @@ function insertAt() {
 }
 
 function insertLink() {
-  const url = window.prompt('插入链接 URL：', 'https://');
+  let url = window.prompt('插入链接 URL：', 'https://');
   if (!url) return;
-  insertAtCursor(document.createTextNode(url));
+  url = url.trim();
+  if (url === 'https://' || url === 'http://') return;
+  // Ensure scheme; if user typed only domain, prepend https://
+  const hasScheme = /^https?:\/\//i.test(url);
+  const href = hasScheme ? url : ('https://' + url);
+  // Optional label
+  const label = window.prompt('链接显示文字（留空即用 URL）：', '') || url;
+
+  const a = document.createElement('a');
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.className = 'inline-link';
+  a.textContent = label;
+  insertAtCursor(a);
+  // Add a trailing space so caret can continue typing after the link
+  insertAtCursor(document.createTextNode(' '));
 }
 
 /* ============================================================
@@ -2216,11 +2246,19 @@ function sanitizeEditorHtml(root) {
   let out = '';
   root.childNodes.forEach(n => {
     if (n.nodeType === Node.TEXT_NODE) {
-      out += escapeHtml(n.textContent);
+      out += linkifyText(n.textContent);
     } else if (n.nodeType === Node.ELEMENT_NODE) {
       if (n.tagName === 'BR') out += '<br>';
       else if (n.tagName === 'IMG' && n.classList.contains('inline-img')) {
         out += `<img class="inline-img" src="${n.src}" alt="${escapeHtml(n.alt || '')}" title="${escapeHtml(n.title || '')}">`;
+      } else if (n.tagName === 'A') {
+        // Preserve already-anchored links (e.g. inserted via paste)
+        const href = (n.getAttribute('href') || '').trim();
+        if (/^https?:\/\//i.test(href)) {
+          out += `<a class="inline-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(n.textContent)}</a>`;
+        } else {
+          out += linkifyText(n.textContent);
+        }
       } else if (n.tagName === 'DIV' || n.tagName === 'P') {
         out += sanitizeEditorHtml(n) + '<br>';
       } else {
@@ -2230,6 +2268,18 @@ function sanitizeEditorHtml(root) {
   });
   return out;
 }
+
+// Escape, then convert URLs into clickable <a> elements.
+function linkifyText(text) {
+  const escaped = escapeHtml(text);
+  // Match http(s)://...   OR   www.foo.com... (no scheme)
+  const re = /\b((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+  return escaped.replace(re, (m) => {
+    const href = m.startsWith('www.') ? 'https://' + m : m;
+    return `<a class="inline-link" href="${href}" target="_blank" rel="noopener noreferrer">${m}</a>`;
+  });
+}
+
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
