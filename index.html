@@ -535,28 +535,43 @@
   .disc-header {
     display: flex; align-items: center; gap: 8px;
   }
+  .disc-bubble {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    color: var(--ink-2);
+    flex-shrink: 0;
+  }
+  .disc-bubble svg { width: 16px; height: 16px; }
   .disc-label {
-    font-size: 13px; font-weight: 600;
-    color: var(--ink-meta);
-    letter-spacing: 0.046em;
-    text-transform: uppercase;
+    font-size: 15px; font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
   }
   .disc-count {
     background: var(--bg-rxn-rest);
+    border: 1px solid var(--line-input);
     border-radius: 100px;
-    padding: 2px 8px;
-    font-size: 11px; font-weight: 500;
-    color: var(--ink-meta);
+    padding: 1px 8px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 11.5px; font-weight: 500;
+    color: var(--ink-sub);
     line-height: 16px;
   }
 
   /* CommentInput */
   .comment-input {
-    background: var(--bg-input);
-    border: 1px solid var(--line-input);
-    border-radius: 10px;
-    padding: 14px 14px 10px;
-    display: flex; flex-direction: column; gap: 10px;
+    background: var(--bg-white);
+    border: 1.5px solid var(--brand-2);
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+    display: flex; flex-direction: column; gap: 16px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .comment-input:focus-within {
+    border-color: var(--brand-2);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
   }
   .comment-input textarea {
     width: 100%;
@@ -582,7 +597,7 @@
     font: inherit;
     font-size: 14px;
     line-height: 24px;
-    min-height: 48px;
+    min-height: 160px;
     padding: 0;
     cursor: text;
     word-wrap: break-word;
@@ -624,39 +639,97 @@
     transition: opacity .12s;
   }
   .c-text img.inline-img:hover { opacity: 0.92; }
+
+  /* Toolbar at the bottom of the composer */
   .toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 30px;
+    display: flex; align-items: center;
+    gap: 14px;
   }
   .toolbar-icons {
-    display: flex; gap: 12px;
+    display: flex; align-items: center; gap: 6px;
     color: var(--ink-sub);
+    flex-shrink: 0;
   }
   .toolbar-icons .ico-btn {
-    width: 18px; height: 18px;
+    width: 32px; height: 32px;
     display: grid; place-items: center;
     color: var(--ink-sub);
     cursor: pointer;
-    transition: color .12s;
+    border-radius: 8px;
+    transition: background .12s, color .12s;
   }
-  .toolbar-icons .ico-btn:hover { color: var(--ink); }
-  .toolbar-icons .ico-btn svg { width: 16px; height: 16px; }
+  .toolbar-icons .ico-btn:hover {
+    background: var(--bg-icon-soft);
+    color: var(--ink);
+  }
+  .toolbar-icons .ico-btn svg { width: 18px; height: 18px; }
+
+  /* Department selector (long pill capsule) */
+  .dept-select {
+    position: relative;
+    flex: 1; min-width: 0;
+    max-width: 460px;
+  }
+  .dept-select select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    border: 1px solid var(--line-input);
+    background: var(--bg-white);
+    border-radius: 8px;
+    padding: 7px 30px 7px 14px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .dept-select select:hover { border-color: var(--ink-grey); }
+  .dept-select select:focus {
+    outline: none;
+    border-color: var(--brand-2);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+  }
+  .dept-select .caret {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 10px; height: 6px;
+    color: var(--ink-grey);
+    pointer-events: none;
+  }
+
+  /* Send row */
+  .send-row {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .send-hint {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--ink-grey);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color .12s;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .send-hint:hover { color: var(--ink-2); background: var(--bg-icon-soft); }
+  .send-hint svg { width: 12px; height: 12px; }
+
   .send-btn {
     background: var(--ink);
     color: var(--bg-white);
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 12.5px;
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 500;
-    transition: opacity .12s;
+    transition: opacity .12s, transform .08s;
   }
-  .send-btn:hover { opacity: 0.85; }
-
-  /* Send row: hint left + button right */
-  .send-row {
-    display: flex; align-items: center; gap: 12px;
-    flex: 0 0 auto;
-  }
+  .send-btn:hover { opacity: 0.88; }
+  .send-btn:active { transform: scale(0.97); }
   .kbd-hint {
     font-size: 11.5px;
     color: var(--ink-grey);
@@ -1501,8 +1574,13 @@
 
         <div class="disc-head-row">
           <div class="disc-header">
+            <span class="disc-bubble">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+                <path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/>
+              </svg>
+            </span>
             <span class="disc-label">讨论</span>
-            <span class="disc-count">8</span>
+            <span class="disc-count">10</span>
           </div>
           <div class="comment-input" id="composer-box">
             <div
@@ -1517,31 +1595,41 @@
             <div class="toolbar">
               <div class="toolbar-icons">
                 <span class="ico-btn" title="@提及" onclick="insertAt()">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
                     <circle cx="8" cy="8" r="3"/>
                     <path d="M11 8v1a2 2 0 0 0 4 0V8a7 7 0 1 0-2.5 5.4"/>
                   </svg>
                 </span>
-                <span class="ico-btn" title="附件" onclick="openFilePicker('file')">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                <span class="ico-btn" title="附件（图片/文件/链接）" onclick="openFilePicker('all')">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                     <path d="M8 1v10.5a2.5 2.5 0 0 1-5 0V4a4 4 0 0 1 8 0v8.5a5.5 5.5 0 0 1-11 0V5"/>
                   </svg>
                 </span>
-                <span class="ico-btn" title="图片" onclick="openFilePicker('image')">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
-                    <rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/>
-                    <circle cx="5.5" cy="6" r="1"/>
-                    <path d="M1.5 11 L5 8 L8 11 L11 7.5 L14.5 11.5"/>
-                  </svg>
-                </span>
-                <span class="ico-btn" title="链接" onclick="insertLink()">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
-                    <path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2L7.5 4.3"/>
-                    <path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2L8.5 11.7"/>
-                  </svg>
-                </span>
               </div>
-              <button class="send-btn" onclick="submitComment()">发送</button>
+
+              <!-- 所属部门选择器（用于标识发言归属） -->
+              <div class="dept-select">
+                <select id="dept-picker">
+                  <option>CDG企业发展事业群/可持续社会价值事业部/技术架构部</option>
+                  <option>CDG企业发展事业群/可持续社会价值事业部/创新发展中心</option>
+                  <option>CDG企业发展事业群/可持续社会价值事业部/技术公益创新发展中心</option>
+                  <option>CDG企业发展事业群/可持续社会价值事业部</option>
+                </select>
+                <svg class="caret" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+                  <path d="M1 1l4 4 4-4"/>
+                </svg>
+              </div>
+
+              <div class="send-row">
+                <span class="send-hint" onclick="submitComment()" title="按 Enter 发送">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2v4a2 2 0 0 1-2 2H2"/>
+                    <path d="M5 5L2 8l3 3"/>
+                  </svg>
+                  发送
+                </span>
+                <button class="send-btn" onclick="submitComment()">发送</button>
+              </div>
             </div>
           </div>
         </div>
