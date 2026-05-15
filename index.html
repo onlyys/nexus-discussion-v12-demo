@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SSV Nexus · v1.1 上线观察 + 后续 v1.2 规划</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+   *  Tokens — 1:1 from Figma 「nesux讨论页迭代」
+   * ============================================================ */
+  :root {
+    /* Surface */
+    --bg-page:        #F5F6F8;   /* App 背景 */
+    --bg-white:       #FFFFFF;
+    --bg-input:       #FAFAFC;   /* 输入框 */
+    --bg-replies:     #F9FAFC;   /* 回复块底色 */
+    --bg-event-tag:   #DBE9FE;   /* Event #3 徽章背景 */
+    --bg-rxn-active:  #EBF0FF;   /* 选中 reaction */
+    --bg-rxn-rest:    #F5F5F7;   /* 其余 reaction / 计数 badge */
+    --bg-unread:      #FEF2F2;   /* 红点 badge 背景 */
+    --bg-icon-soft:   #F5F6F8;   /* 侧栏选中态背景 */
+    --bg-image-prev:  #F2F5FA;   /* 图片预览底 */
+
+    /* Ink */
+    --ink:        #1F2328;       /* 主文字 / topbar 底色 */
+    --ink-2:      #1F2429;       /* 评论正文 */
+    --ink-3:      #373736;       /* Event 标题字色 */
+    --ink-meta:   #4A5463;       /* "讨论" 标签 */
+    --ink-sub:    #6B7380;       /* 操作行（回复/编辑/删除） */
+    --ink-hint:   #73737A;       /* 作者副标题 */
+    --ink-quote:  #66666E;       /* 计数文字 */
+    --ink-grey:   #9CA3AF;       /* topbar slogan / sidebar 标签 / 未输入提示 */
+    --ink-input:  #9CA3B0;       /* 输入框 placeholder */
+
+    /* Lines */
+    --line:       #E6E8EB;       /* topbar 底边 / sidebar 右边 */
+    --line-soft:  #F1F3F5;       /* Event card 内分隔线 */
+    --line-card:  #E5E8EB;       /* DiscussionSection_v2 边框 */
+    --line-input: #E0E0E5;       /* 输入框边 */
+    --line-divider:#EDF0F2;      /* RepliesCard 内 divider */
+    --line-pdf:   #E5E5EB;       /* PDF chip / Link preview 边 */
+
+    /* Brand */
+    --brand:      #2463EB;       /* Event tag 边色 */
+    --brand-2:    #2563EB;       /* sidebar 圆点 / 链接 */
+    --brand-3:    #2663EB;       /* mention */
+    --brand-4:    #4066E5;       /* reaction 计数文字 */
+    --brand-soft: #DBEAFE;       /* link underline */
+    --brand-rxn:  #99B2F2;       /* reaction 边框（active） */
+
+    /* Avatars */
+    --av-c:       #5C6BF5;       /* coffee 钟嘉辉 */
+    --av-s:       #738CD9;       /* suri 王昕 */
+    --av-d:       #8CC78C;       /* 李丹阳 */
+    --av-p:       #AB8FD9;       /* 李培伦 */
+    --av-x:       #F2BA4D;       /* 肖迈 */
+
+    /* Status */
+    --red:        #EF4444;       /* 通知红点 */
+    --red-text:   #DC2626;       /* 红点徽章数字 */
+
+    /* Type */
+    --font: "Inter", "Noto Sans SC", "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-page);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; padding: 0; }
+  a { color: inherit; text-decoration: none; cursor: pointer; }
+  ::selection { background: var(--ink); color: var(--bg-white); }
+
+  /* ============================================================
+   *  Topbar
+   * ============================================================ */
+  .topbar {
+    background: var(--ink);
+    color: var(--bg-white);
+    padding: 12px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .brand-group { display: flex; align-items: center; gap: 19px; }
+  .logo {
+    width: 28px; height: 28px;
+    background: var(--bg-white);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--ink);
+    font-weight: 700; font-size: 15px; line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .brand-name {
+    font-size: 15px; font-weight: 600;
+    line-height: 22.5px; letter-spacing: -0.02em;
+  }
+  .slogan {
+    font-size: 12px; color: var(--ink-grey);
+    line-height: 16px;
+  }
+  .me {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 13px;
+  }
+  .bell {
+    position: relative;
+    width: 16px; height: 16px;
+    display: grid; place-items: center;
+  }
+  .bell svg { width: 16px; height: 16px; color: var(--bg-white); }
+  .bell .dot {
+    position: absolute; top: -2px; right: -2px;
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 999px;
+  }
+
+  /* ============================================================
+   *  Layout
+   * ============================================================ */
+  .layout { display: flex; min-height: calc(100vh - 53px); }
+
+  /* ============================================================
+   *  Sidebar
+   * ============================================================ */
+  .sidebar {
+    width: 220px;
+    background: var(--bg-white);
+    border-right: 1px solid var(--line);
+    padding: 16px 12px;
+    flex-shrink: 0;
+    display: flex; flex-direction: column;
+    gap: 6px;
+  }
+  .side-section {
+    display: flex; flex-direction: column;
+    gap: 2px;
+  }
+  .side-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 8px 8px;
+  }
+  .side-label {
+    font-size: 11px; font-weight: 600;
+    line-height: 16px; letter-spacing: 0.06em;
+    color: var(--ink-grey);
+    padding: 8px 10px 6px;
+    text-transform: uppercase;
+  }
+  .side-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 14px; font-weight: 500;
+    line-height: 20px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .12s, color .12s;
+  }
+  .side-item:hover { background: var(--bg-icon-soft); }
+  .side-item.active {
+    background: var(--ink);
+    color: var(--bg-white);
+  }
+  .side-item .ico-svg {
+    width: 16px; height: 16px;
+    display: grid; place-items: center;
+    color: currentColor;
+    flex-shrink: 0;
+  }
+  .side-item .ico-svg svg {
+    width: 16px; height: 16px;
+  }
+  .side-item .label { flex: 1; }
+  .side-badge {
+    background: var(--bg-unread);
+    color: var(--red-text);
+    font-size: 10.5px;
+    padding: 1.5px 6px;
+    border-radius: 999px;
+    line-height: 15.75px;
+    font-weight: 400;
+  }
+  .side-badge.grey {
+    background: var(--bg-icon-soft);
+    color: var(--ink-sub);
+  }
+
+  /* ============================================================
+   *  Main
+   * ============================================================ */
+  .main {
+    flex: 1;
+    padding: 28px 36px;
+    display: flex; flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  /* ============================================================
+   *  Rightbar (Topic overview & insight)
+   * ============================================================ */
+  .rightbar {
+    width: 380px;
+    flex-shrink: 0;
+    background: var(--bg-page);
+    padding: 24px 24px 32px;
+    border-left: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+  .rb-head {
+    display: flex; flex-direction: column;
+    gap: 12px;
+  }
+  .rb-title-row {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .rb-title-row .doc-ico {
+    width: 18px; height: 18px;
+    color: var(--ink-2);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .rb-title-row .doc-ico svg { width: 100%; height: 100%; }
+  .rb-title {
+    font-family: "PingFang SC", var(--font);
+    font-size: 16px; font-weight: 600;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .rb-author {
+    font-size: 13px;
+    color: var(--ink-sub);
+    line-height: 1.5;
+  }
+  .rb-stats {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .rb-stat {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-white);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    line-height: 1;
+  }
+  .rb-stat svg { width: 14px; height: 14px; color: var(--ink-sub); }
+
+  .rb-section-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    padding-top: 4px;
+  }
+
+  /* 灰底圆角卡片（Topic 概览卡 / 洞察卡共用） */
+  .rb-card {
+    background: var(--bg-replies);
+    border-radius: 14px;
+    padding: 18px 18px 20px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+  }
+  .rb-card .date-chip {
+    align-self: flex-start;
+    background: var(--bg-event-tag);
+    color: var(--brand-2);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 12px; font-weight: 500;
+    line-height: 1.4;
+  }
+  .rb-card .card-text {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 28px;
+  }
+
+  .rb-insight-title {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--brand-2);
+    font-size: 14px; font-weight: 600;
+    line-height: 1;
+  }
+  .rb-insight-title svg { width: 14px; height: 14px; }
+
+  .rb-list {
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    list-style: none;
+    counter-reset: rblist;
+    display: flex; flex-direction: column;
+    gap: 10px;
+  }
+  .rb-list li {
+    display: flex; gap: 10px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 22px;
+    counter-increment: rblist;
+  }
+  .rb-list li::before {
+    content: counter(rblist) ".";
+    flex-shrink: 0;
+    color: var(--ink-2);
+    font-weight: 500;
+    width: 18px;
+  }
+
+  .rb-reanalyze {
+    align-self: center;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px;
+    background: var(--bg-white);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 13.5px;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: background .12s, border-color .12s;
+    margin-top: 8px;
+  }
+  .rb-reanalyze:hover { background: var(--bg-icon-soft); border-color: var(--ink-grey); }
+  .rb-reanalyze .badge-ico {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    background: var(--brand-2);
+    color: var(--bg-white);
+    display: grid; place-items: center;
+    font-size: 9px; font-weight: 700;
+  }
+
+  /* topic header */
+  .topic-head {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .topic-head-l {
+    display: flex; flex-direction: column; gap: 4px;
+    width: 552px;
+  }
+  .topic-title-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .topic-title {
+    font-size: 16px; font-weight: 600;
+    color: var(--ink);
+  }
+  .crumb-text {
+    font-size: 12.5px; line-height: 18.75px;
+    color: var(--ink-sub);
+  }
+  .visibility {
+    background: var(--bg-event-tag);
+    border: 1px solid var(--brand);
+    border-radius: 8px;
+    padding: 4px 12px;
+    width: 87px;
+    font-size: 11px;
+    color: var(--brand);
+    display: flex; align-items: center; gap: 5px;
+    line-height: 1;
+  }
+
+  /* event card collapsed */
+  .event-row {
+    background: var(--bg-white);
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .triangle {
+    width: 10.5px; height: 12px;
+    color: #B4B2AE;
+  }
+  .triangle svg { width: 100%; height: 100%; }
+  .event-row-content {
+    flex: 1;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .event-row-left {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--ink-2);
+    font-size: 13px;
+  }
+  .event-row-tag {
+    background: var(--bg-event-tag);
+    border-radius: 4px;
+    color: var(--brand);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    line-height: 17.25px;
+  }
+  .event-row-text {
+    font-family: "PingFang SC", var(--font);
+    font-size: 16px; font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: -0.002em;
+  }
+  .event-row-meta {
+    font-size: 12px;
+    color: var(--ink-grey);
+    line-height: 16px;
+  }
+
+  /* ============================================================
+   *  EventArticle
+   * ============================================================ */
+  .event-article {
+    background: var(--bg-white);
+    border: 1px solid var(--brand);
+    border-radius: 14px;
+    padding: 20px 20px 32px;
+    display: flex; flex-direction: column;
+    gap: 20px;
+    position: relative;
+  }
+  .ea-head {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ea-head-l {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ea-tag {
+    background: var(--bg-event-tag);
+    color: var(--brand);
+    border-radius: 4px;
+    font-size: 11.5px; font-weight: 500;
+    padding: 2px 8px;
+    line-height: 17.25px;
+  }
+  .ea-tag-title {
+    font-family: "PingFang SC", var(--font);
+    font-size: 16px; font-weight: 500;
+    color: var(--ink-3);
+  }
+  .ea-meta {
+    font-size: 12px;
+    color: var(--ink-grey);
+    line-height: 16px;
+  }
+  .ea-title {
+    font-size: 26px; font-weight: 600;
+    line-height: 39px;
+    color: var(--ink);
+    letter-spacing: -0.017em;
+  }
+  .ea-author {
+    font-size: 13px;
+    color: var(--ink-hint);
+    line-height: 1.5;
+  }
+  .ea-body {
+    display: flex; flex-direction: column;
+    gap: 14px;
+    color: var(--ink);
+    font-size: 15.5px;
+    line-height: 28.67px;
+    letter-spacing: -0.018em;
+  }
+  .ea-body ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .ea-body li::marker { color: var(--ink-2); }
+  .ea-body a {
+    color: var(--brand-2);
+    border-bottom: 1px solid var(--brand-soft);
+  }
+  .ea-body em.mention {
+    color: var(--brand-3);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* Reactions */
+  .reactions-bar {
+    border-top: 1px solid var(--line-soft);
+    padding-top: 16px;
+    display: flex; gap: 6px;
+  }
+  .rxn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 8px;
+    border-radius: 100px;
+    font-size: 13px;
+    background: var(--bg-rxn-rest);
+    cursor: pointer;
+    user-select: none;
+    transition: all .12s;
+    line-height: 1;
+  }
+  .rxn .emoji { font-size: 13px; line-height: 1; }
+  .rxn .num {
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-quote);
+  }
+  .rxn:hover { background: #ECECEF; }
+  .rxn.active {
+    background: var(--bg-rxn-active);
+    border: 1px solid var(--brand-rxn);
+    padding: 3px 7px;
+  }
+  .rxn.active .num { color: var(--brand-4); }
+
+  /* ============================================================
+   *  DiscussionSection_v2
+   * ============================================================ */
+  .discussion {
+    background: var(--bg-white);
+    border: 1px solid var(--line-card);
+    border-radius: 14px;
+    padding: 24px 28px 72px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .disc-head-row {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .disc-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .disc-label {
+    font-size: 13px; font-weight: 600;
+    color: var(--ink-meta);
+    letter-spacing: 0.046em;
+    text-transform: uppercase;
+  }
+  .disc-count {
+    background: var(--bg-rxn-rest);
+    border-radius: 100px;
+    padding: 2px 8px;
+    font-size: 11px; font-weight: 500;
+    color: var(--ink-meta);
+    line-height: 16px;
+  }
+
+  /* CommentInput */
+  .comment-input {
+    background: var(--bg-input);
+    border: 1px solid var(--line-input);
+    border-radius: 10px;
+    padding: 14px 14px 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .comment-input textarea {
+    width: 100%;
+    border: 0;
+    outline: none;
+    resize: none;
+    background: transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 14px;
+    line-height: 24px;
+    min-height: 48px;
+    padding: 0;
+  }
+  .comment-input textarea::placeholder { color: var(--ink-input); }
+
+  /* contenteditable composer — replaces textarea so we can embed inline images */
+  .composer-editor {
+    width: 100%;
+    border: 0; outline: none;
+    background: transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 14px;
+    line-height: 24px;
+    min-height: 48px;
+    padding: 0;
+    cursor: text;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .composer-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--ink-input);
+    pointer-events: none;
+  }
+  .composer-editor img.inline-img {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 320px;
+    max-height: 220px;
+    border-radius: 6px;
+    border: 1px solid var(--line-input);
+    margin: 4px 4px 4px 0;
+    cursor: default;
+    /* 让 contenteditable 退格能整体删除 */
+    user-select: none;
+  }
+  .composer-editor img.inline-img.selected {
+    outline: 2px solid var(--brand-2);
+    outline-offset: 1px;
+  }
+
+  /* When a comment is sent: images appear in normal flow with text */
+  .c-text img.inline-img {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 360px;
+    max-height: 240px;
+    border-radius: 8px;
+    border: 1px solid var(--line-input);
+    margin: 4px 6px 4px 0;
+    cursor: zoom-in;
+    transition: opacity .12s;
+  }
+  .c-text img.inline-img:hover { opacity: 0.92; }
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 30px;
+  }
+  .toolbar-icons {
+    display: flex; gap: 12px;
+    color: var(--ink-sub);
+  }
+  .toolbar-icons .ico-btn {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    color: var(--ink-sub);
+    cursor: pointer;
+    transition: color .12s;
+  }
+  .toolbar-icons .ico-btn:hover { color: var(--ink); }
+  .toolbar-icons .ico-btn svg { width: 16px; height: 16px; }
+  .send-btn {
+    background: var(--ink);
+    color: var(--bg-white);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: opacity .12s;
+  }
+  .send-btn:hover { opacity: 0.85; }
+
+  /* Send row: hint left + button right */
+  .send-row {
+    display: flex; align-items: center; gap: 12px;
+    flex: 0 0 auto;
+  }
+  .kbd-hint {
+    font-size: 11.5px;
+    color: var(--ink-grey);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .kbd-hint kbd {
+    display: inline-block;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    background: var(--bg-white);
+    border: 1px solid var(--line-input);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10.5px;
+    color: var(--ink-sub);
+    margin: 0 2px;
+    line-height: 1.3;
+  }
+
+  /* ============================================================
+   *  Comment + Replies
+   * ============================================================ */
+  .comment {
+    display: flex; gap: 12px;
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 32px;
+    display: grid; place-items: center;
+    color: var(--bg-white);
+    font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .avatar.sm { width: 24px; height: 24px; font-size: 10px; }
+  .av-c { background: var(--av-c); }
+  .av-s { background: var(--av-s); }
+  .av-d { background: var(--av-d); }
+  .av-p { background: var(--av-p); }
+  .av-x { background: var(--av-x); }
+
+  .c-content {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .c-name-row {
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .c-author {
+    font-family: "Noto Sans SC", var(--font);
+    font-size: 14px; font-weight: 700;
+    line-height: 20px;
+    color: var(--ink-2);
+  }
+  .c-dept {
+    font-size: 12px;
+    color: var(--ink-input);
+    line-height: 18px;
+  }
+  .c-text {
+    font-family: "Noto Sans SC", var(--font);
+    font-size: 14px; font-weight: 400;
+    line-height: 24px;
+    color: var(--ink-2);
+    letter-spacing: -0.011em;
+  }
+  .c-text .mention {
+    color: var(--brand-3);
+    font-weight: 500;
+  }
+  .c-actions {
+    display: flex; align-items: center; gap: 14px;
+    padding-top: 2px;
+    font-family: "Noto Sans SC", var(--font);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .c-actions .time { color: var(--ink-input); }
+  .c-actions .act { color: var(--ink-sub); cursor: pointer; transition: color .12s; }
+  .c-actions .act:hover { color: var(--ink); }
+
+  /* RepliesCard */
+  .replies-wrap {
+    padding-left: 44px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .replies-card {
+    background: var(--bg-replies);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .replies-card.standalone {
+    margin-left: 0;
+  }
+
+  .reply {
+    display: flex; gap: 10px;
+  }
+  .reply .c-content { gap: 4px; }
+  .reply .c-author { font-size: 12.5px; line-height: 18px; }
+  .reply .c-dept { font-size: 11.5px; line-height: 17px; }
+  .reply .c-text {
+    font-size: 13px; line-height: 22px;
+    letter-spacing: 0;
+  }
+  .reply .c-actions { font-size: 11.5px; }
+  .reply-divider {
+    height: 1px;
+    background: var(--line-divider);
+  }
+
+  /* SubReply（更深一层，缩进） */
+  .sub-reply {
+    padding-left: 0;
+  }
+  .sub-reply .reply {
+    padding-left: 0;
+  }
+  .sub-reply-indent {
+    padding-left: 16px;
+    border-left: 2px solid var(--line-divider);
+    margin-top: 4px;
+  }
+
+  /* Image preview */
+  .img-preview {
+    background: var(--bg-image-prev);
+    border: 1px solid var(--line-input);
+    border-radius: 8px;
+    padding: 60px 20px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer;
+    transition: opacity .12s;
+  }
+  .img-preview:hover { opacity: 0.92; }
+  .img-preview .title {
+    font-size: 13px;
+    color: var(--ink-quote);
+  }
+  .img-preview .hint {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px;
+    color: var(--ink-sub);
+  }
+  .img-preview .hint svg { width: 11px; height: 11px; }
+
+  /* PDF chip */
+  .pdf-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px 8px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--line-pdf);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .12s;
+    align-self: flex-start;
+  }
+  .pdf-chip:hover { background: var(--bg-icon-soft); }
+  .pdf-chip .pdf-ico {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #E63946, #C4232E);
+    display: grid; place-items: center;
+    color: var(--bg-white);
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .pdf-chip .pdf-info {
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .pdf-chip .pdf-name {
+    font-size: 12.5px; font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .pdf-chip .pdf-size {
+    font-size: 10.5px;
+    color: var(--ink-input);
+  }
+
+  /* Link preview */
+  .link-preview {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--line-pdf);
+    border-radius: 8px;
+    width: 300px;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .link-preview:hover { background: var(--bg-icon-soft); }
+  .link-preview .l-title {
+    font-size: 12.5px; font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .link-preview .l-url {
+    font-size: 11px;
+    color: var(--ink-input);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ============================================================
+   *  Floating AI panel placeholder（右侧浮卡）
+   * ============================================================ */
+  .ai-panel {
+    position: fixed;
+    right: 28px; bottom: 28px;
+    width: 362px;
+    background: var(--bg-white);
+    border: 1px solid var(--line-card);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+    z-index: 100;
+    display: flex; flex-direction: column; gap: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .ai-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .ai-head .sparkle { color: var(--brand-2); font-size: 14px; }
+  .ai-head .refresh {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink-sub);
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background .12s;
+  }
+  .ai-head .refresh:hover { background: var(--bg-icon-soft); }
+  .ai-section { display: flex; flex-direction: column; gap: 6px; }
+  .ai-section-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--ink-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ai-summary {
+    font-size: 13px;
+    line-height: 22px;
+    color: var(--ink-2);
+  }
+  .ai-tip {
+    background: var(--bg-input);
+    border-left: 3px solid var(--brand-2);
+    padding: 10px 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 12.5px;
+    line-height: 20px;
+    color: var(--ink-2);
+  }
+  .ai-tip strong { font-weight: 600; }
+
+  /* ============================================================
+   *  Helpers
+   * ============================================================ */
+  .row { display: flex; align-items: center; gap: 8px; }
+
+  /* ============================================================
+   *  Attachment Preview (composer area)
+   * ============================================================ */
+  .attach-preview-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 4px 0 0;
+  }
+  .attach-preview-row[hidden] { display: none; }
+  .attach-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 10px 6px 8px;
+    background: var(--bg-white);
+    border: 1px solid var(--line-input);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+    transition: border-color .12s;
+    max-width: 240px;
+  }
+  .attach-chip:hover { border-color: var(--ink-grey); }
+  .attach-chip .file-ico {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    display: grid; place-items: center;
+    color: var(--bg-white);
+    font-size: 8px; font-weight: 700;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .attach-chip .file-ico.pdf { background: linear-gradient(135deg, #E63946, #C4232E); }
+  .attach-chip .file-ico.ppt { background: linear-gradient(135deg, #F2742B, #D95A1A); }
+  .attach-chip .file-ico.txt { background: linear-gradient(135deg, #6C757D, #495057); }
+  .attach-chip .file-ico.md  { background: linear-gradient(135deg, #1F2937, #111827); }
+  .attach-chip .file-ico.png { background: linear-gradient(135deg, #16A34A, #15803D); }
+  .attach-chip .file-ico.unk { background: linear-gradient(135deg, #94A3B8, #64748B); }
+  .attach-chip .meta {
+    display: flex; flex-direction: column; min-width: 0;
+  }
+  .attach-chip .name {
+    font-size: 12.5px; font-weight: 500;
+    color: var(--ink-2);
+    line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 160px;
+  }
+  .attach-chip .size {
+    font-size: 10.5px;
+    color: var(--ink-input);
+    line-height: 1.3;
+  }
+  .attach-chip .remove {
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    display: grid; place-items: center;
+    color: var(--ink-grey);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    margin-left: 4px;
+    flex-shrink: 0;
+    transition: background .12s, color .12s;
+  }
+  .attach-chip .remove:hover { background: var(--bg-icon-soft); color: var(--ink); }
+
+  /* Posted attachments under sent comment (downloadable) */
+  .posted-attachments {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 4px;
+  }
+  .posted-attachments .attach-chip {
+    cursor: pointer;
+  }
+  .posted-attachments .attach-chip .remove { display: none; }
+  .posted-attachments .attach-chip .download {
+    width: 16px; height: 16px;
+    color: var(--ink-grey);
+    margin-left: 4px;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    transition: color .12s;
+  }
+  .posted-attachments .attach-chip:hover .download { color: var(--brand-2); }
+  .posted-attachments .attach-chip .download svg { width: 14px; height: 14px; }
+
+  /* ============================================================
+   *  File Picker Modal
+   * ============================================================ */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(20, 19, 18, 0.36);
+    backdrop-filter: blur(2px);
+    z-index: 500;
+    display: none;
+    justify-content: center; align-items: center;
+  }
+  .modal-backdrop.show { display: flex; animation: fadeIn .15s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .file-picker {
+    width: 640px;
+    max-height: 76vh;
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: 0 24px 56px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .fp-title-bar {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .fp-traffic {
+    display: flex; gap: 6px;
+  }
+  .fp-traffic .dot {
+    width: 12px; height: 12px;
+    border-radius: 999px;
+  }
+  .fp-traffic .dot.r { background: #FF5F57; }
+  .fp-traffic .dot.y { background: #FEBC2E; }
+  .fp-traffic .dot.g { background: #28C840; }
+  .fp-title {
+    flex: 1;
+    text-align: center;
+    font-size: 13px; font-weight: 500;
+    color: var(--ink-2);
+  }
+  .fp-close {
+    color: var(--ink-grey);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .fp-close:hover { color: var(--ink); }
+
+  .fp-path-bar {
+    padding: 8px 20px;
+    background: var(--bg-icon-soft);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    color: var(--ink-sub);
+  }
+  .fp-path-bar .seg { padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+  .fp-path-bar .seg:hover { background: var(--bg-white); color: var(--ink); }
+  .fp-path-bar .sep { color: var(--ink-grey); }
+  .fp-path-bar .seg.current { color: var(--ink); font-weight: 500; }
+
+  .fp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .fp-list {
+    display: grid;
+    grid-template-columns: 1fr 100px 110px;
+    padding: 0 20px;
+  }
+  .fp-row-head {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 11px; font-weight: 600;
+    color: var(--ink-grey);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .fp-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: center;
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .fp-row:hover { background: var(--bg-icon-soft); }
+  .fp-row.selected {
+    background: var(--bg-rxn-active);
+  }
+  .fp-row.selected .fp-name { color: var(--brand-2); }
+  .fp-row.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .fp-row.disabled:hover { background: transparent; }
+  .fp-name {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+    color: var(--ink-2);
+    overflow: hidden;
+  }
+  .fp-name .checkbox {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--ink-grey);
+    border-radius: 3px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    background: var(--bg-white);
+  }
+  .fp-row.selected .checkbox {
+    background: var(--brand-2);
+    border-color: var(--brand-2);
+  }
+  .fp-row.selected .checkbox::after {
+    content: "";
+    width: 4px; height: 7px;
+    border: solid var(--bg-white);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .fp-name .ico {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    display: grid; place-items: center;
+    color: var(--bg-white);
+    font-size: 7px; font-weight: 700;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .fp-name .ico.folder { background: linear-gradient(135deg, #60A5FA, #2563EB); font-size: 11px; }
+  .fp-name .ico.pdf { background: linear-gradient(135deg, #E63946, #C4232E); }
+  .fp-name .ico.ppt { background: linear-gradient(135deg, #F2742B, #D95A1A); }
+  .fp-name .ico.docx, .fp-name .ico.doc { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+  .fp-name .ico.xlsx, .fp-name .ico.xls { background: linear-gradient(135deg, #16A34A, #15803D); }
+  .fp-name .ico.txt { background: linear-gradient(135deg, #6C757D, #495057); }
+  .fp-name .ico.md { background: linear-gradient(135deg, #1F2937, #111827); }
+  .fp-name .ico.png, .fp-name .ico.jpg, .fp-name .ico.jpeg { background: linear-gradient(135deg, #16A34A, #15803D); }
+  .fp-name .ico.zip, .fp-name .ico.mp4 { background: linear-gradient(135deg, #94A3B8, #64748B); }
+  .fp-name .text {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fp-size {
+    font-size: 12px;
+    color: var(--ink-sub);
+    font-variant-numeric: tabular-nums;
+  }
+  .fp-date {
+    font-size: 12px;
+    color: var(--ink-sub);
+  }
+
+  .fp-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-icon-soft);
+  }
+  .fp-status {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink-sub);
+  }
+  .fp-status strong { color: var(--brand-2); font-weight: 600; }
+  .fp-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: all .12s;
+  }
+  .fp-btn.cancel {
+    background: var(--bg-white);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .fp-btn.cancel:hover { background: var(--bg-icon-soft); }
+  .fp-btn.upload {
+    background: var(--ink);
+    color: var(--bg-white);
+  }
+  .fp-btn.upload:hover { opacity: 0.88; }
+  .fp-btn.upload:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* Toast */
+  #toast-stack {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 600;
+    display: flex; flex-direction: column; gap: 8px;
+    align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--ink);
+    color: var(--bg-white);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .2s, transform .2s;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  /* Upload progress bar */
+  .upload-bar {
+    position: fixed;
+    left: 50%; bottom: 28px;
+    transform: translateX(-50%);
+    background: var(--bg-white);
+    border: 1px solid var(--line);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 14px 18px;
+    min-width: 320px;
+    display: none;
+    z-index: 550;
+  }
+  .upload-bar.show { display: block; }
+  .upload-bar .ub-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; font-weight: 500;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+  }
+  .upload-bar .ub-pct {
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    color: var(--brand-2);
+    font-weight: 600;
+  }
+  .upload-bar .track {
+    height: 4px;
+    background: var(--line-soft);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .upload-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand-2), #60A5FA);
+    width: 0;
+    transition: width .12s linear;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== Topbar ==================== -->
+<div class="topbar">
+  <div class="brand-group">
+    <div class="logo">N</div>
+    <div>
+      <div class="brand-name">SSV Nexus</div>
+      <div class="slogan">透明即上下文,上下文即生产力</div>
+    </div>
+  </div>
+  <div class="me">
+    <div class="bell">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M3 6.5a5 5 0 0 1 10 0V10l1.5 2H1.5L3 10V6.5z"/>
+        <path d="M6 13a2 2 0 0 0 4 0"/>
+      </svg>
+      <div class="dot"></div>
+    </div>
+    <span>钟嘉辉</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ==================== Sidebar ==================== -->
+  <aside class="sidebar">
+    <!-- 主导航：ALL / MY -->
+    <div class="side-section">
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>
+          </svg>
+        </span>
+        <span class="label">ALL</span>
+      </div>
+      <div class="side-item active">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="8" cy="8" r="7"/>
+            <circle cx="8" cy="6.5" r="2.2"/>
+            <path d="M3.5 13c.8-2 2.5-3 4.5-3s3.7 1 4.5 3"/>
+          </svg>
+        </span>
+        <span class="label">MY</span>
+      </div>
+    </div>
+
+    <div class="side-divider"></div>
+
+    <!-- TOOLS -->
+    <div class="side-section">
+      <div class="side-label">TOOLS</div>
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <circle cx="8" cy="8" r="6.5"/>
+            <path d="M8 2.5l-2 5h2.2L7 13.5l2.6-6H7.4L8.6 2.5"/>
+          </svg>
+        </span>
+        <span class="label">技能</span>
+      </div>
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+            <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="0.5"/>
+            <rect x="9" y="1.5" width="5.5" height="5.5" rx="0.5"/>
+            <rect x="1.5" y="9" width="5.5" height="5.5" rx="0.5"/>
+            <rect x="9" y="9" width="5.5" height="5.5" rx="0.5"/>
+          </svg>
+        </span>
+        <span class="label">插件</span>
+      </div>
+    </div>
+
+    <div class="side-divider"></div>
+
+    <!-- ADMIN -->
+    <div class="side-section">
+      <div class="side-label">ADMIN</div>
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="8" cy="8" r="6.5"/>
+            <circle cx="8" cy="5.5" r="0.7" fill="currentColor"/>
+            <path d="M7 8h1v4h-.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="label">定位</span>
+      </div>
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <path d="M3 1.5h6.5L13 5v9.5H3z"/>
+            <path d="M9.5 1.5V5H13"/>
+          </svg>
+        </span>
+        <span class="label">宪章</span>
+      </div>
+      <div class="side-item">
+        <span class="ico-svg">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <path d="M8 1.5l5.5 3.2v6.6L8 14.5 2.5 11.3V4.7z"/>
+            <circle cx="8" cy="8" r="2.2"/>
+          </svg>
+        </span>
+        <span class="label">设置</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== Main ==================== -->
+  <main class="main">
+
+    <!-- topic header -->
+    <div class="topic-head">
+      <div class="topic-head-l">
+        <div class="topic-title-row">
+          <div class="topic-title">SSV Nexus 产品进展</div>
+        </div>
+        <div class="crumb-text">
+          suriwang（王昕）技术架构部/技术公益创新发展中心 • 2026-04-21 17:01 • 可见范围：SSV 全体员工
+        </div>
+      </div>
+      <div class="visibility">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><path d="M1 6c1-3 3-4.5 5-4.5S10 3 11 6c-1 3-3 4.5-5 4.5S2 9 1 6z"/></svg>
+        全体可见
+      </div>
+    </div>
+
+    <!-- collapsed events -->
+    <div class="event-row">
+      <div class="triangle">
+        <svg viewBox="0 0 11 12" fill="currentColor"><path d="M2 1.5l7 4.5-7 4.5z"/></svg>
+      </div>
+      <div class="event-row-content">
+        <div class="event-row-left">
+          <span class="event-row-tag">#1</span>
+          <span class="event-row-text">v1.0 立项 + 第一版需求</span>
+        </div>
+        <div class="event-row-meta">发布于 4 月 21 日 · 阅读 28 / 28</div>
+      </div>
+    </div>
+    <div class="event-row">
+      <div class="triangle">
+        <svg viewBox="0 0 11 12" fill="currentColor"><path d="M2 1.5l7 4.5-7 4.5z"/></svg>
+      </div>
+      <div class="event-row-content">
+        <div class="event-row-left">
+          <span class="event-row-tag">#2</span>
+          <span class="event-row-text">v1.0 上线复盘</span>
+        </div>
+        <div class="event-row-meta">发布于 4 月 28 日 · 阅读 26 / 28</div>
+      </div>
+    </div>
+
+    <!-- Event Article -->
+    <article class="event-article">
+      <div class="ea-head">
+        <div class="ea-head-l">
+          <div class="triangle" style="color:var(--brand)">
+            <svg viewBox="0 0 11 12" fill="currentColor"><path d="M2 0.5l7 5.5-7 5.5z"/></svg>
+          </div>
+          <span class="ea-tag">#3</span>
+          <span class="ea-tag-title">一些新的思考，即将到来的新体验</span>
+        </div>
+        <div class="ea-meta">发布于 5 月 6 日 · 阅读 23 / 28</div>
+      </div>
+
+      <div>
+        <h1 class="ea-title">v1.1 上线观察 + 后续 v1.2 规划</h1>
+        <div class="ea-author">suriwang（王昕）</div>
+      </div>
+
+      <div class="ea-body">
+        <p>大家好,v1.1 已经上线一周。这周我做了一轮简单的访谈和数据观察,把发现整理在这里,请各位看一下后给意见。</p>
+
+        <p>数据侧:</p>
+        <ul>
+          <li>讨论区打开率: 从 38% 提升到 52%, 混合态 C 让"看到讨论氛围"的时间窗变长</li>
+          <li>首条讨论发起率: +17%, "我也来参加讨论" 的引导文案有效降低门槛</li>
+          <li>但"标记已解决"使用率非常低, 一周只有 6 次</li>
+        </ul>
+
+        <p>用户访谈: 访谈了 4 位活跃用户后我发现, 大家对"Thread"这个概念是困惑的。原话: "我点进去看到一堆白底卡片, 不太确定是评论还是任务"——这条反馈非常重要。</p>
+
+        <p>v1.2 我建议这样调整 (详见 <a>requirement-v1.2.md</a>):</p>
+        <ul>
+          <li>概念回归: 不再使用 Thread, 回到 Topic + Event 两层</li>
+          <li>视觉降噪: 去掉所有状态 chip 和 meta, 让注意力回到"讲了什么"</li>
+          <li>用 @ 驱动「来看」列表: 替换原 My 待办, 更轻量</li>
+          <li>富内容: 发言里支持 @ 人、链接、图片、文件</li>
+        </ul>
+
+        <p>麻烦 <em class="mention">@钟嘉辉</em> <em class="mention">@肖迈</em> <em class="mention">@李丹阳</em> 看下, 下面留两个讨论方向, 我先抛砖:</p>
+      </div>
+
+      <!-- Reactions -->
+      <div class="reactions-bar">
+        <div class="rxn active">
+          <span class="emoji">👍</span>
+          <span class="num">3</span>
+        </div>
+        <div class="rxn">
+          <span class="emoji">👎</span>
+          <span class="num">0</span>
+        </div>
+        <div class="rxn">
+          <span class="emoji">🤔</span>
+          <span class="num">1</span>
+        </div>
+      </div>
+
+      <!-- Discussion Section v2 -->
+      <section class="discussion">
+
+        <div class="disc-head-row">
+          <div class="disc-header">
+            <span class="disc-label">讨论</span>
+            <span class="disc-count">8</span>
+          </div>
+          <div class="comment-input" id="composer-box">
+            <div
+              class="composer-editor"
+              id="composer-textarea"
+              contenteditable="true"
+              data-placeholder="我也来参加讨论…"></div>
+
+            <!-- 已选附件预览区（上传后展示，发送前可删除） -->
+            <div class="attach-preview-row" id="attach-preview-row" hidden></div>
+
+            <div class="toolbar">
+              <div class="toolbar-icons">
+                <span class="ico-btn" title="@提及" onclick="insertAt()">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                    <circle cx="8" cy="8" r="3"/>
+                    <path d="M11 8v1a2 2 0 0 0 4 0V8a7 7 0 1 0-2.5 5.4"/>
+                  </svg>
+                </span>
+                <span class="ico-btn" title="附件" onclick="openFilePicker('file')">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                    <path d="M8 1v10.5a2.5 2.5 0 0 1-5 0V4a4 4 0 0 1 8 0v8.5a5.5 5.5 0 0 1-11 0V5"/>
+                  </svg>
+                </span>
+                <span class="ico-btn" title="图片" onclick="openFilePicker('image')">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                    <rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/>
+                    <circle cx="5.5" cy="6" r="1"/>
+                    <path d="M1.5 11 L5 8 L8 11 L11 7.5 L14.5 11.5"/>
+                  </svg>
+                </span>
+                <span class="ico-btn" title="链接" onclick="insertLink()">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+                    <path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2L7.5 4.3"/>
+                    <path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2L8.5 11.7"/>
+                  </svg>
+                </span>
+              </div>
+              <button class="send-btn" onclick="submitComment()">发送</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comment 1: 钟嘉辉 -->
+        <div class="comment">
+          <div class="avatar av-c">c</div>
+          <div class="c-content">
+            <div class="c-name-row">
+              <span class="c-author">coffeezhong(钟嘉辉)</span>
+              <span class="c-dept">技术架构/部门</span>
+            </div>
+            <div class="c-text">想再讨论下红点消失逻辑: 现在是用户点击 Topic 即清除未读, 但如果他只是一扫而过没真正阅读, 红点就丢了, 后续新动态他反而感知不到。 我倾向"停留 &gt; 3s 或滚动到底部"才算已读。<span class="mention">@肖迈</span></div>
+            <div class="c-actions">
+              <span class="time">2 小时前</span>
+              <span class="act">回复</span>
+              <span class="act">编辑</span>
+              <span class="act">删除</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RepliesCard 1 -->
+        <div class="replies-wrap">
+          <div class="replies-card">
+            <div class="reply">
+              <div class="avatar sm av-s">s</div>
+              <div class="c-content">
+                <div class="c-name-row">
+                  <span class="c-author">suriwang(王昕)</span>
+                  <span class="c-dept">技术架构/部门</span>
+                </div>
+                <div class="c-text">同意这个判断。"3s 停留" 是行业里相对成熟的判定, 我们可以加个埋点先观测一周。</div>
+                <div class="c-actions">
+                  <span class="time">2 小时前</span>
+                  <span class="act">回复</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-divider"></div>
+
+            <div class="reply">
+              <div class="avatar sm av-d">d</div>
+              <div class="c-content">
+                <div class="c-name-row">
+                  <span class="c-author">李丹阳</span>
+                  <span class="c-dept">产品/部门</span>
+                </div>
+                <div class="c-text">补充一下: 滚动到底部这个条件很关键, 长 Event 用户经常滑到一半就走, 不能因此判定为已读。</div>
+                <div class="c-actions">
+                  <span class="time">1 小时前</span>
+                  <span class="act">回复</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-divider"></div>
+
+            <div class="reply">
+              <div class="avatar sm av-p">p</div>
+              <div class="c-content">
+                <div class="c-name-row">
+                  <span class="c-author">李培伦</span>
+                  <span class="c-dept">前端/部门</span>
+                </div>
+                <div class="c-text">实现方面: 用 IntersectionObserver 判定底部是否进入视口, 加上 setTimeout 3s 即可, 复杂度可控。</div>
+                <div class="c-actions">
+                  <span class="time">52 分钟前</span>
+                  <span class="act">回复</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-divider"></div>
+
+            <div class="reply">
+              <div class="avatar sm av-x">x</div>
+              <div class="c-content">
+                <div class="c-name-row">
+                  <span class="c-author">肖迈</span>
+                  <span class="c-dept">设计/部门</span>
+                </div>
+                <div class="c-text">从设计角度也认同。可以考虑做一个微动效: 已读瞬间红点慢慢淡出, 而不是直接消失, 让用户有"我刚才看过"的反馈。</div>
+                <div class="c-actions">
+                  <span class="time">30 分钟前</span>
+                  <span class="act">回复</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-divider"></div>
+
+            <!-- SubReplyCard 钟嘉辉（深一层） -->
+            <div class="reply">
+              <div class="avatar sm av-c">c</div>
+              <div class="c-content">
+                <div class="c-name-row">
+                  <span class="c-author">coffeezhong(钟嘉辉)</span>
+                  <span class="c-dept">技术架构/部门</span>
+                </div>
+                <div class="c-text">那我下周开埋点 + 出技术方案, 这里先 close。<span class="mention">@肖迈</span> 关于淡出动效, 给个具体的曲线参数？</div>
+                <div class="c-actions">
+                  <span class="time">5 分钟前</span>
+                  <span class="act">回复</span>
+                  <span class="act">编辑</span>
+                  <span class="act">删除</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comment 2: 王昕 -->
+        <div class="comment">
+          <div class="avatar av-s">s</div>
+          <div class="c-content">
+            <div class="c-name-row">
+              <span class="c-author">suriwang(王昕)</span>
+              <span class="c-dept">技术架构/部门</span>
+            </div>
+            <div class="c-text">另外说一下飞书集成方案。我们之前调研过一轮, <span class="mention">@李培伦</span> 你看 webhook 还是 OpenAPI 哪个更适合? 我个人倾向哪个更稳就用哪个, 长期维护成本敏感。</div>
+
+            <div class="img-preview">
+              <span class="title">对比表 · webhook vs OpenAPI</span>
+              <span class="hint">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v3l2 1.5"/></svg>
+                点击展开
+              </span>
+            </div>
+
+            <div class="c-actions">
+              <span class="time">昨天</span>
+              <span class="act">回复</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RepliesCard 2 -->
+        <div class="replies-card standalone" style="margin-left: 44px;">
+
+          <div class="reply">
+            <div class="avatar sm av-p">p</div>
+            <div class="c-content">
+              <div class="c-name-row">
+                <span class="c-author">李培伦</span>
+                <span class="c-dept">前端/部门</span>
+              </div>
+              <div class="c-text">调研下来 OpenAPI 更稳, webhook 经常丢消息(飞书侧没有重试机制)。但 OpenAPI 要做 token 刷新、限流、错误降级一整套, 工作量稍大。完整对比在这里:</div>
+
+              <div class="pdf-chip">
+                <div class="pdf-ico">PDF</div>
+                <div class="pdf-info">
+                  <span class="pdf-name">飞书集成方案对比.pdf</span>
+                  <span class="pdf-size">1.2 MB · 12 页</span>
+                </div>
+              </div>
+
+              <div class="c-actions">
+                <span class="time">昨天</span>
+                <span class="act">回复</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reply-divider"></div>
+
+          <div class="reply">
+            <div class="avatar sm av-x">x</div>
+            <div class="c-content">
+              <div class="c-name-row">
+                <span class="c-author">肖迈</span>
+                <span class="c-dept">设计/部门</span>
+              </div>
+              <div class="c-text">同意 OpenAPI。token 刷新封装成 SDK 后续也能复用到其他第三方集成里。可以看下 larksuite/oapi-sdk-go 这个开源 SDK。</div>
+
+              <a class="link-preview">
+                <span class="l-title">larksuite/oapi-sdk-go: Lark/Feishu Open API SDK</span>
+                <span class="l-url">github.com/larksuite/oapi-sdk-go</span>
+              </a>
+
+              <div class="c-actions">
+                <span class="time">昨天</span>
+                <span class="act">回复</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reply-divider"></div>
+
+          <div class="reply">
+            <div class="avatar sm av-s">s</div>
+            <div class="c-content">
+              <div class="c-name-row">
+                <span class="c-author">suriwang(王昕)</span>
+                <span class="c-dept">技术架构/部门</span>
+              </div>
+              <div class="c-text">那这块就这么定, <span class="mention">@李培伦</span> 这周出技术方案？</div>
+              <div class="c-actions">
+                <span class="time">12 分钟前</span>
+                <span class="act">回复</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+    </article>
+
+  </main>
+
+  <!-- ==================== Right Sidebar (Topic 概览 & 洞察) ==================== -->
+  <aside class="rightbar">
+    <!-- 头部：Topic 标题 + 作者 + 3 个统计胶囊 -->
+    <div class="rb-head">
+      <div class="rb-title-row">
+        <span class="doc-ico">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <path d="M4 1.5h7L14 5v11.5H4z"/>
+            <path d="M11 1.5V5h3"/>
+          </svg>
+        </span>
+        <div class="rb-title">探讨：你心目中的 SSV 理念是什么？</div>
+      </div>
+      <div class="rb-author">ewellzhao(赵国臣) · 2026-04-23</div>
+      <div class="rb-stats">
+        <span class="rb-stat">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1v10.5a2.5 2.5 0 0 1-5 0V4a4 4 0 0 1 8 0v8.5a5.5 5.5 0 0 1-11 0V5"/></svg>
+          1 事件
+        </span>
+        <span class="rb-stat">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H6l-3 3v-3H4a2 2 0 0 1-2-2V4z"/></svg>
+          10 条讨论
+        </span>
+        <span class="rb-stat">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="M5 8.2 L7.2 10.4 L11 6.5"/></svg>
+          3 条待办
+        </span>
+      </div>
+    </div>
+
+    <!-- Topic 概览 -->
+    <div class="rb-section-title">Topic 概览</div>
+    <div class="rb-card">
+      <span class="date-chip">2026-04-23</span>
+      <div class="card-text">
+        正值 SSV 战略发布五周年，发起关于 SSV 核心理念（是组织、战略还是理念）的重新探讨。旨在通过收集成员对 SSV 定位的见解，在业务快速扩张、深层讨论减少的背景下，重新对齐并共建团队的理念认知。
+      </div>
+    </div>
+
+    <!-- 洞察卡 -->
+    <div class="rb-card">
+      <div class="rb-insight-title">
+        <svg viewBox="0 0 14 14" fill="currentColor"><path d="M7 0l1.6 4.8L13 6.4l-3.2 2.3.6 4.6L7 10.9 3.6 13.3l.6-4.6L1 6.4l4.4-1.6z"/></svg>
+        洞察
+      </div>
+      <div class="card-text">
+        正值战略发布五周年，理念重新对齐的前置条件是明确"组织、战略、理念"三个维度的定义框架，否则容易导致收集到的反馈过于零散。在业务快速扩张期，需预留足够的窗口期供团队深度参与，防止此项工作因业务优先级过高而流于形式。
+      </div>
+      <ol class="rb-list">
+        <li>确认 7 位维护人之间的内部分工及理念探讨的具体形式</li>
+        <li>制定与五周年时间节点匹配的任务进度表</li>
+        <li>梳理理念共建后的应用场景，如是否涉及组织架构或业务考核的调整</li>
+      </ol>
+      <button class="rb-reanalyze">
+        <span class="badge-ico">T</span>
+        重新分析
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ==================== File Picker Modal ==================== -->
+<div class="modal-backdrop" id="fp-modal" onclick="if(event.target.id==='fp-modal')closeFilePicker()">
+  <div class="file-picker">
+    <div class="fp-title-bar">
+      <div class="fp-traffic">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+      </div>
+      <div class="fp-title">选择文件 — 访达</div>
+      <div class="fp-close" onclick="closeFilePicker()">×</div>
+    </div>
+    <div class="fp-path-bar">
+      <span class="seg">📁 我的电脑</span>
+      <span class="sep">›</span>
+      <span class="seg">luoqq</span>
+      <span class="sep">›</span>
+      <span class="seg">Desktop</span>
+      <span class="sep">›</span>
+      <span class="seg current">nexus-资料</span>
+    </div>
+    <div class="fp-body">
+      <div class="fp-list">
+        <div class="fp-row-head">
+          <div>名称</div>
+          <div>大小</div>
+          <div>修改日期</div>
+        </div>
+        <!-- File rows are rendered by JS -->
+        <div id="fp-list-body"></div>
+      </div>
+    </div>
+    <div class="fp-footer">
+      <div class="fp-status" id="fp-status">未选择任何文件</div>
+      <button class="fp-btn cancel" onclick="closeFilePicker()">取消</button>
+      <button class="fp-btn upload" id="fp-upload-btn" onclick="confirmUpload()" disabled>上传</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload progress -->
+<div class="upload-bar" id="upload-bar">
+  <div class="ub-head">
+    <span>正在上传 <span id="ub-name">—</span></span>
+    <span class="ub-pct" id="ub-pct">0%</span>
+  </div>
+  <div class="track"><div class="fill" id="ub-fill"></div></div>
+</div>
+
+<!-- Toasts -->
+<div id="toast-stack"></div>
+
+<script>
+/* ============================================================
+ *  Mock filesystem
+ * ============================================================ */
+const MOCK_FILES = [
+  // Supported types: pdf / ppt / txt / md / png
+  { name: '飞书集成方案对比.pdf',          size: '1.2 MB',  date: '今天 09:14',   type: 'pdf',  supported: true },
+  { name: '红点已读判定埋点设计.pdf',      size: '480 KB',  date: '今天 08:02',   type: 'pdf',  supported: true },
+  { name: 'v1.2 设计评审 deck.pptx',       size: '5.6 MB',  date: '昨天 17:30',   type: 'ppt',  supported: true },
+  { name: 'Nexus 信息架构 v1.2.md',        size: '12 KB',   date: '昨天 14:50',   type: 'md',   supported: true },
+  { name: 'requirement-v1.2.md',           size: '8 KB',    date: '昨天 11:20',   type: 'md',   supported: true },
+  { name: '用户访谈纪要.txt',              size: '24 KB',   date: '前天',         type: 'txt',  supported: true },
+  { name: '讨论区交互流程图.png',          size: '420 KB',  date: '前天',         type: 'png',  supported: true },
+  { name: '已读判定流程.png',              size: '380 KB',  date: '5月10日',      type: 'png',  supported: true },
+
+  // Unsupported (展示但不能选)
+  { name: 'recording.mp4',                  size: '128 MB', date: '5月8日',       type: 'mp4',  supported: false },
+  { name: '资料合集.zip',                   size: '34 MB',  date: '5月5日',       type: 'zip',  supported: false },
+  { name: '需求模版.xlsx',                  size: '156 KB', date: '5月1日',       type: 'xlsx', supported: false },
+  { name: '设计规范.docx',                  size: '512 KB', date: '4月28日',      type: 'docx', supported: false },
+];
+
+const SUPPORTED_LABEL = ['pdf', 'ppt', 'txt', 'md', 'png'];
+const TYPE_LABEL = { pdf:'PDF', ppt:'PPT', pptx:'PPT', txt:'TXT', md:'MD', png:'PNG', jpg:'JPG', docx:'DOC', doc:'DOC', xlsx:'XLS', xls:'XLS', zip:'ZIP', mp4:'MP4' };
+
+let fpSelected = new Set();      // index of MOCK_FILES selected in picker
+let pendingAttachments = [];     // { name, size, type } selected & ready to send
+let currentPickerMode = 'file';
+
+/* ============================================================
+ *  Open / Close picker
+ * ============================================================ */
+function openFilePicker(mode) {
+  currentPickerMode = mode;
+  fpSelected.clear();
+  renderFileList();
+  updateFpFooter();
+  document.getElementById('fp-modal').classList.add('show');
+}
+
+function closeFilePicker() {
+  document.getElementById('fp-modal').classList.remove('show');
+}
+
+function renderFileList() {
+  const body = document.getElementById('fp-list-body');
+  body.innerHTML = MOCK_FILES.map((f, i) => {
+    const isImg = currentPickerMode === 'image';
+    // In image mode: only PNG selectable; rest disabled
+    const allowed = f.supported && (isImg ? f.type === 'png' : true);
+    const cls = ['fp-row'];
+    if (fpSelected.has(i)) cls.push('selected');
+    if (!allowed) cls.push('disabled');
+    const ico = (TYPE_LABEL[f.type] || '?').slice(0, 3);
+    return `
+      <div class="${cls.join(' ')}" onclick="${allowed ? `toggleSelect(${i})` : ''}">
+        <div class="fp-name">
+          <div class="checkbox"></div>
+          <div class="ico ${f.type}">${ico}</div>
+          <div class="text">${f.name}${!allowed ? ' <span style="color:var(--ink-grey);font-size:11px;">(不支持)</span>' : ''}</div>
+        </div>
+        <div class="fp-size">${f.size}</div>
+        <div class="fp-date">${f.date}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSelect(idx) {
+  if (fpSelected.has(idx)) fpSelected.delete(idx);
+  else fpSelected.add(idx);
+  renderFileList();
+  updateFpFooter();
+}
+
+function updateFpFooter() {
+  const status = document.getElementById('fp-status');
+  const btn = document.getElementById('fp-upload-btn');
+  const count = fpSelected.size;
+  if (count === 0) {
+    status.textContent = '未选择任何文件 · 可多选';
+    btn.disabled = true;
+  } else {
+    status.innerHTML = `已选 <strong>${count}</strong> 个文件`;
+    btn.disabled = false;
+  }
+}
+
+/* ============================================================
+ *  Upload (simulated progress)
+ * ============================================================ */
+function confirmUpload() {
+  const picks = [...fpSelected].map(i => MOCK_FILES[i]);
+  closeFilePicker();
+  if (!picks.length) return;
+
+  // Simulate sequential upload with one shared progress bar
+  const bar = document.getElementById('upload-bar');
+  const fill = document.getElementById('ub-fill');
+  const pct = document.getElementById('ub-pct');
+  const nameEl = document.getElementById('ub-name');
+
+  bar.classList.add('show');
+  let total = picks.length;
+  let i = 0;
+
+  function nextFile() {
+    if (i >= total) {
+      bar.classList.remove('show');
+      fill.style.width = '0%';
+      pct.textContent = '0%';
+      // Split: images go inline into the composer; others become attachment chips
+      const images = picks.filter(p => p.type === 'png' || p.type === 'jpg' || p.type === 'jpeg');
+      const files  = picks.filter(p => !(p.type === 'png' || p.type === 'jpg' || p.type === 'jpeg'));
+      if (images.length) insertImagesInline(images);
+      if (files.length) {
+        pendingAttachments.push(...files.map(p => ({ name: p.name, size: p.size, type: p.type })));
+        renderAttachPreview();
+      }
+      showToast(`✅ 已上传 ${picks.length} 个${images.length && !files.length ? '图片' : files.length && !images.length ? '文件' : '附件'}`);
+      return;
+    }
+    nameEl.textContent = picks[i].name;
+    let p = 0;
+    fill.style.width = '0%';
+    pct.textContent = '0%';
+    const tick = setInterval(() => {
+      p += Math.random() * 18 + 6;
+      if (p >= 100) { p = 100; clearInterval(tick); setTimeout(nextFile, 180); }
+      fill.style.width = p + '%';
+      pct.textContent = Math.round(p) + '%';
+    }, 80);
+    i++;
+  }
+  nextFile();
+}
+
+/* ============================================================
+ *  Inline image insertion into contenteditable composer
+ * ============================================================ */
+// Pre-made image URLs (placeholder photos that load offline-friendly inline svg)
+const IMG_BANK = {
+  '讨论区交互流程图.png':
+    "data:image/svg+xml;utf8," + encodeURIComponent(`
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'>
+  <defs><linearGradient id='g1' x1='0' x2='1' y1='0' y2='1'>
+    <stop offset='0' stop-color='#DBEAFE'/><stop offset='1' stop-color='#BFDBFE'/>
+  </linearGradient></defs>
+  <rect width='320' height='200' fill='url(#g1)'/>
+  <rect x='28' y='40' width='80' height='40' rx='6' fill='#FFFFFF' stroke='#2563EB' stroke-width='1.5'/>
+  <text x='68' y='65' font-family='Inter' font-size='12' fill='#1F2937' text-anchor='middle'>用户点击</text>
+  <path d='M115 60 L140 60' stroke='#2563EB' stroke-width='1.5' marker-end='url(#a)'/>
+  <rect x='145' y='40' width='80' height='40' rx='6' fill='#FFFFFF' stroke='#2563EB' stroke-width='1.5'/>
+  <text x='185' y='65' font-family='Inter' font-size='12' fill='#1F2937' text-anchor='middle'>3s 判定</text>
+  <path d='M232 60 L257 60' stroke='#2563EB' stroke-width='1.5'/>
+  <rect x='262' y='40' width='40' height='40' rx='6' fill='#2563EB'/>
+  <text x='282' y='65' font-family='Inter' font-size='10' fill='#FFFFFF' text-anchor='middle'>已读</text>
+  <rect x='28' y='110' width='80' height='40' rx='6' fill='#FFFFFF' stroke='#9CA3AF' stroke-width='1.5'/>
+  <text x='68' y='135' font-family='Inter' font-size='12' fill='#374151' text-anchor='middle'>未到 3s</text>
+  <path d='M115 130 L257 130' stroke='#9CA3AF' stroke-width='1.5' stroke-dasharray='4 4'/>
+  <rect x='262' y='110' width='40' height='40' rx='6' fill='#9CA3AF'/>
+  <text x='282' y='135' font-family='Inter' font-size='10' fill='#FFFFFF' text-anchor='middle'>未读</text>
+  <text x='160' y='185' font-family='Inter' font-size='11' fill='#6B7280' text-anchor='middle'>讨论区已读判定流程</text>
+</svg>`),
+  '已读判定流程.png':
+    "data:image/svg+xml;utf8," + encodeURIComponent(`
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 180'>
+  <rect width='280' height='180' fill='#F0FDF4'/>
+  <circle cx='140' cy='60' r='28' fill='#FFFFFF' stroke='#16A34A' stroke-width='2'/>
+  <text x='140' y='66' font-family='Inter' font-size='12' fill='#15803D' text-anchor='middle'>进入</text>
+  <path d='M140 92 L140 118' stroke='#16A34A' stroke-width='2'/>
+  <rect x='80' y='118' width='120' height='36' rx='6' fill='#FFFFFF' stroke='#16A34A' stroke-width='1.5'/>
+  <text x='140' y='141' font-family='Inter' font-size='11' fill='#1F2937' text-anchor='middle'>停留 ≥ 3s 或滚到底</text>
+  <text x='140' y='172' font-family='Inter' font-size='10' fill='#15803D' text-anchor='middle'>✓ 已读</text>
+</svg>`),
+};
+
+function imgSrcFor(name) {
+  return IMG_BANK[name] ||
+    "data:image/svg+xml;utf8," + encodeURIComponent(`
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 160'>
+  <rect width='240' height='160' fill='#F2F5FA'/>
+  <text x='120' y='86' font-family='Inter' font-size='13' fill='#6B7280' text-anchor='middle'>${name}</text>
+</svg>`);
+}
+
+function insertImagesInline(images) {
+  const ed = document.getElementById('composer-textarea');
+  ed.focus();
+  // Get current selection inside editor
+  const sel = window.getSelection();
+  let range = null;
+  if (sel && sel.rangeCount && ed.contains(sel.anchorNode)) {
+    range = sel.getRangeAt(0);
+  } else {
+    // Place cursor at end
+    range = document.createRange();
+    range.selectNodeContents(ed);
+    range.collapse(false);
+  }
+  // Insert images one by one at the cursor
+  images.forEach(img => {
+    const node = document.createElement('img');
+    node.src = imgSrcFor(img.name);
+    node.alt = img.name;
+    node.title = img.name + ' · ' + img.size;
+    node.className = 'inline-img';
+    node.dataset.size = img.size;
+    range.insertNode(node);
+    // Move cursor right after the image
+    range.setStartAfter(node);
+    range.setEndAfter(node);
+    // Add a zero-width space to ensure caret visible after the image
+    const space = document.createTextNode(' ');
+    range.insertNode(space);
+    range.setStartAfter(space);
+    range.setEndAfter(space);
+  });
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/* ============================================================
+ *  Attachment preview (above toolbar, in composer)
+ * ============================================================ */
+function renderAttachPreview() {
+  const row = document.getElementById('attach-preview-row');
+  if (!pendingAttachments.length) {
+    row.hidden = true;
+    row.innerHTML = '';
+    return;
+  }
+  row.hidden = false;
+  row.innerHTML = pendingAttachments.map((a, i) => attachChipHtml(a, i, true)).join('');
+}
+
+function attachChipHtml(a, idx, removable) {
+  const t = (a.type || 'unk').toLowerCase();
+  const cls = ['pdf','ppt','txt','md','png'].includes(t) ? t : 'unk';
+  const label = (TYPE_LABEL[t] || '?').slice(0, 3);
+  return `
+    <div class="attach-chip">
+      <div class="file-ico ${cls}">${label}</div>
+      <div class="meta">
+        <span class="name" title="${a.name}">${a.name}</span>
+        <span class="size">${a.size}</span>
+      </div>
+      ${removable
+        ? `<div class="remove" onclick="removePending(${idx})" title="移除">×</div>`
+        : `<div class="download" title="下载"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 1v9m0 0l-3-3m3 3l3-3M2 12h10"/></svg></div>`
+      }
+    </div>
+  `;
+}
+
+function removePending(idx) {
+  pendingAttachments.splice(idx, 1);
+  renderAttachPreview();
+}
+
+/* ============================================================
+ *  Insert @ / Link helpers (contenteditable)
+ * ============================================================ */
+function insertAtCursor(textNode) {
+  const ed = document.getElementById('composer-textarea');
+  ed.focus();
+  const sel = window.getSelection();
+  let range;
+  if (sel && sel.rangeCount && ed.contains(sel.anchorNode)) {
+    range = sel.getRangeAt(0);
+  } else {
+    range = document.createRange();
+    range.selectNodeContents(ed);
+    range.collapse(false);
+  }
+  range.insertNode(textNode);
+  range.setStartAfter(textNode);
+  range.setEndAfter(textNode);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function insertAt() {
+  insertAtCursor(document.createTextNode('@'));
+}
+
+function insertLink() {
+  const url = window.prompt('插入链接 URL：', 'https://');
+  if (!url) return;
+  insertAtCursor(document.createTextNode(url));
+}
+
+/* ============================================================
+ *  Submit comment (text + inline images + file attachments)
+ * ============================================================ */
+function submitComment() {
+  const ed = document.getElementById('composer-textarea');
+  // Sanitize editor HTML: keep only text + <img class="inline-img"> + <br>
+  const tmp = document.createElement('div');
+  tmp.innerHTML = ed.innerHTML;
+  // Strip any unexpected tags by reconstructing only text/img/br
+  const sanitized = sanitizeEditorHtml(tmp);
+  const hasContent = !!sanitized.trim().replace(/<br\s*\/?>/g, '').trim();
+  const hasImages = /<img\s/.test(sanitized);
+  if (!hasContent && pendingAttachments.length === 0 && !hasImages) {
+    showToast('请输入讨论内容或添加附件 / 图片');
+    return;
+  }
+
+  // Mention highlight (skip inside <img ...>)
+  const formatted = sanitized.replace(/@([^\s<@]+)/g, '<span class="mention">@$1</span>');
+
+  const attachmentsHtml = pendingAttachments.length
+    ? `<div class="posted-attachments">${pendingAttachments.map((a, i) => attachChipHtml(a, i, false)).join('')}</div>`
+    : '';
+
+  const commentHtml = `
+    <div class="comment" style="animation: fadeIn .25s ease;">
+      <div class="avatar av-c">钟</div>
+      <div class="c-content">
+        <div class="c-name-row">
+          <span class="c-author">coffeezhong(钟嘉辉)</span>
+          <span class="c-dept">技术架构/部门</span>
+        </div>
+        <div class="c-text">${formatted || '<span style="color:var(--ink-input);font-style:italic;">分享了附件</span>'}</div>
+        ${attachmentsHtml}
+        <div class="c-actions">
+          <span class="time">刚刚</span>
+          <span class="act">回复</span>
+          <span class="act">编辑</span>
+          <span class="act">删除</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const discussion = document.querySelector('.discussion');
+  const firstComment = discussion.querySelector('.comment');
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = commentHtml.trim();
+  discussion.insertBefore(wrapper.firstChild, firstComment);
+
+  const countEl = document.querySelector('.disc-count');
+  if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+
+  // Reset composer
+  ed.innerHTML = '';
+  pendingAttachments = [];
+  renderAttachPreview();
+
+  showToast('💬 讨论已发布');
+
+  setTimeout(() => {
+    const newOne = discussion.querySelector('.comment');
+    if (newOne) newOne.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// Only keep text content, <br>, and our trusted inline images
+function sanitizeEditorHtml(root) {
+  let out = '';
+  root.childNodes.forEach(n => {
+    if (n.nodeType === Node.TEXT_NODE) {
+      out += escapeHtml(n.textContent);
+    } else if (n.nodeType === Node.ELEMENT_NODE) {
+      if (n.tagName === 'BR') out += '<br>';
+      else if (n.tagName === 'IMG' && n.classList.contains('inline-img')) {
+        out += `<img class="inline-img" src="${n.src}" alt="${escapeHtml(n.alt || '')}" title="${escapeHtml(n.title || '')}">`;
+      } else if (n.tagName === 'DIV' || n.tagName === 'P') {
+        out += sanitizeEditorHtml(n) + '<br>';
+      } else {
+        out += sanitizeEditorHtml(n);
+      }
+    }
+  });
+  return out;
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+ *  Toast
+ * ============================================================ */
+function showToast(msg) {
+  const stack = document.getElementById('toast-stack');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  stack.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 250);
+  }, 2400);
+}
+
+/* Composer keyboard:
+ *   Enter             → 发送
+ *   Ctrl/Cmd/Shift+Enter → 换行
+ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const ed = document.getElementById('composer-textarea');
+    if (document.activeElement === ed) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        // Insert a <br> at cursor position (newline)
+        e.preventDefault();
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const br = document.createElement('br');
+        range.insertNode(br);
+        // Insert a zero-width text node after to anchor caret
+        const after = document.createTextNode('\u200B');
+        br.parentNode.insertBefore(after, br.nextSibling);
+        range.setStartAfter(after);
+        range.setEndAfter(after);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        // Plain Enter → send
+        e.preventDefault();
+        submitComment();
+      }
+    }
+  }
+  if (e.key === 'Escape') closeFilePicker();
+});
+</script>
+
+</body>
+</html>
